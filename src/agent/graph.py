@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from langchain.agents import create_agent
@@ -68,7 +69,35 @@ def build_tools(store: TravelDataStore):
     @tool
     def search_flights(origin: str, destination: str, departure_date: str, travelers: int = 1) -> str:
         """Search flights for a route and departure date."""
-        raise NotImplementedError
+        flights = store.search_flights(
+            origin=origin,
+            destination=destination,
+            departure_date=departure_date,
+            travelers=travelers,
+        )
+        if not flights:
+            return json.dumps(
+                {
+                    "status": "not_found",
+                    "message": "No matching flights found.",
+                    "origin": origin,
+                    "destination": destination,
+                    "departure_date": departure_date,
+                    "travelers": travelers,
+                },
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {
+                "status": "ok",
+                "origin": origin,
+                "destination": destination,
+                "departure_date": departure_date,
+                "travelers": travelers,
+                "flights": [flight.model_dump() for flight in flights],
+            },
+            ensure_ascii=False,
+        )
 
     @tool
     def calculate_budget(
