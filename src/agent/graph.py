@@ -141,7 +141,32 @@ def build_tools(store: TravelDataStore):
     @tool
     def search_hotels(city: str, max_price_per_night: int, preferences: list[str] | None = None) -> str:
         """Search hotels that fit the remaining nightly budget and user preferences."""
-        raise NotImplementedError
+        hotels = store.search_hotels(
+            city=city,
+            max_price_per_night=max_price_per_night,
+            preferences=preferences,
+        )
+        if not hotels:
+            return json.dumps(
+                {
+                    "status": "not_found",
+                    "message": "No matching hotels found within the nightly budget.",
+                    "city": city,
+                    "max_price_per_night": max_price_per_night,
+                    "preferences": preferences or [],
+                },
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {
+                "status": "ok",
+                "city": city,
+                "max_price_per_night": max_price_per_night,
+                "preferences": preferences or [],
+                "hotels": [hotel.model_dump() for hotel in hotels],
+            },
+            ensure_ascii=False,
+        )
 
     return [search_flights, calculate_budget, search_hotels]
 
