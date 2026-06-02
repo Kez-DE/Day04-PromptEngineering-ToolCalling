@@ -108,7 +108,35 @@ def build_tools(store: TravelDataStore):
         travelers: int = 1,
     ) -> str:
         """Calculate the remaining travel budget after flight and local transport costs."""
-        raise NotImplementedError
+        if nights <= 0:
+            return json.dumps(
+                {
+                    "status": "error",
+                    "message": "nights must be greater than zero.",
+                    "nights": nights,
+                },
+                ensure_ascii=False,
+            )
+
+        local_transport_estimate = 300_000
+        remaining = total_budget - cheapest_flight_total - local_transport_estimate
+        max_hotel_price_per_night = max(0, remaining // nights)
+
+        return json.dumps(
+            {
+                "status": "ok",
+                "destination": destination,
+                "travelers": travelers,
+                "nights": nights,
+                "total_budget": total_budget,
+                "flight_total": cheapest_flight_total,
+                "local_transport_estimate": local_transport_estimate,
+                "remaining_after_flight_and_transport": remaining,
+                "max_hotel_price_per_night": max_hotel_price_per_night,
+                "is_budget_feasible": remaining > 0,
+            },
+            ensure_ascii=False,
+        )
 
     @tool
     def search_hotels(city: str, max_price_per_night: int, preferences: list[str] | None = None) -> str:
